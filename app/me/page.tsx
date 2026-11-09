@@ -46,9 +46,10 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
         </div>
       )}
 
+      <div style={{ display: "flex", flexDirection: "column" }}>
       {/* Weekly pick */}
-      {w && g.teamsLocked !== undefined && (
-        <section className="card">
+      {w && (
+        <section className="card" style={{ order: g.teamsLocked ? 0 : 1 }}>
           <h2 style={{ marginTop: 0 }}>Week {w.number}: who goes home?</h2>
           <p className="muted small">
             Due {formatDeadline(w.deadline)}. You can change it until then. Everyone's picks show after the deadline.
@@ -82,12 +83,12 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
       )}
 
       {/* Team */}
-      <section className="card">
+      <section className="card" style={{ order: g.teamsLocked ? 1 : 0 }}>
         <h2 style={{ marginTop: 0 }}>Your team</h2>
         {!g.teamsLocked ? (
           <>
             <p className="muted small">
-              Pick 3 castaways in order, favourite first. Others can pick the same people. Your order is the tiebreaker at the end of the season.
+              Pick 3 castaways in order, favorite first. Others can pick the same people. Your order is the tiebreaker at the end of the season.
               {g.week1 && <> Teams lock at {formatDeadline(g.week1.deadline)}.</>}
             </p>
             {cast.length < 3 ? (
@@ -125,7 +126,7 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
 
       {/* Swap */}
       {g.teamsLocked && team.length === 3 && (
-        <section className="card">
+        <section className="card" style={{ order: 2 }}>
           <h2 style={{ marginTop: 0 }}>Your one swap</h2>
           {g.swapOpen ? (
             <>
@@ -156,6 +157,7 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
         </section>
       )}
 
+      </div>
       <p className="small"><Link href={`/player/${me.id}`}>See your score breakdown →</Link></p>
     </>
   );

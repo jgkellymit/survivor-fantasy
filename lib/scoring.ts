@@ -55,7 +55,7 @@ export interface Castaway {
 export interface Player {
   id: string;
   name: string;
-  /** ordered team, favourite first (order is the tiebreaker) */
+  /** ordered team, favorite first (order is the tiebreaker) */
   team: string[];
   swap: { drop: string; add: string } | null;
 }

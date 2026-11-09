@@ -10,7 +10,7 @@ export default function Rules() {
         <h2 id="basics" style={{ marginTop: 0 }}>The basics</h2>
         <ul>
           <li><strong>When it starts:</strong> at the merge. The first episode after the merge is Week 1.</li>
-          <li><strong>Your team:</strong> pick 3 castaways from the merged tribe and rank them 1 to 3, favourite first. It isn't a draft, so several people can have the same castaway. Your ranking only matters as a tiebreaker.</li>
+          <li><strong>Your team:</strong> pick 3 castaways from the merged tribe and rank them 1 to 3, favorite first. It isn't a draft, so several people can have the same castaway. Your ranking only matters as a tiebreaker.</li>
           <li><strong>Team deadline:</strong> teams lock at the Week 1 pick deadline.</li>
           <li><strong>What counts as a week:</strong> each challenge and tribal where someone goes home. An episode with a double tribal is still one week, with two votes.</li>
         </ul>
