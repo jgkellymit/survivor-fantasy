@@ -73,6 +73,8 @@ export interface SeasonData {
   picks: WeeklyPick[];
   /** week from which a swap takes effect */
   swapWeek?: number;
+  /** "got votes but stayed" bonus (new this season; off when replaying Season 50) */
+  gotVotesBonus?: boolean;
 }
 
 export interface ScoreLine {
@@ -177,7 +179,7 @@ export function scoreSeason(data: SeasonData): PlayerScore[] {
 
       for (const t of r.tribals) {
         // Got votes but stayed
-        for (const [cid, n] of Object.entries(t.votes)) {
+        if (data.gotVotesBonus !== false) for (const [cid, n] of Object.entries(t.votes)) {
           if (n > 0 && cid !== t.wentHome && onTeam(cid)) {
             lines.push({ points: 5, reason: `${name(cid)} got votes but stayed`, rule: "got-votes" });
           }
