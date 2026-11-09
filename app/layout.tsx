@@ -10,10 +10,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const admin = await isAdmin();
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet" />
+      </head>
       <body>
         <header className="top">
           <div className="wrap">
-            <Link href="/" className="brand"><span className="torch">🔥</span> Survivor Fantasy</Link>
+            <Link href="/" className="brand"><span className="torch">🔥</span> Survivor <span className="fantasy">Fantasy</span></Link>
             <nav className="main">
               <Link href="/">Standings</Link>
               <Link href="/me">My team</Link>

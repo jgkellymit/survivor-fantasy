@@ -5,7 +5,7 @@ import { loadAll } from "@/lib/db";
 import { gameState, teamOf } from "@/lib/game";
 import { formatDeadline } from "@/lib/time";
 import { saveSwap, saveTeam, saveWeeklyPick } from "@/app/actions";
-import { Avatar, CastawayChip } from "@/components/Avatar";
+import { Avatar, CastawayTile } from "@/components/Avatar";
 import { SWAP_WEEK } from "@/lib/scoring";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
 
   return (
     <>
-      <h1>Hi, {me.name}</h1>
+      <h1>Hi, {me.name} 👋</h1>
       {sp.ok && <div className="notice">{sp.ok}</div>}
       {sp.err && <div className="notice err">{sp.err}</div>}
       {sp.welcome && (
@@ -69,7 +69,7 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
                       {stillIn.map((c) => (
                         <label key={c.id} className="pickopt">
                           <input type="radio" name={`pick${slot}`} value={c.id} defaultChecked={cur === c.id} required={slot === 1} />
-                          <Avatar name={c.name} photo={c.photo_url} /> {c.name}
+                          <Avatar name={c.name} photo={c.photo_url} size="lg" /> {c.name}
                         </label>
                       ))}
                     </div>
@@ -110,14 +110,10 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
           </>
         ) : team.length ? (
           <>
-            <ol>
-              {team.map((c) => (
-                <li key={c} style={{ marginBottom: 6 }}>
-                  <CastawayChip name={g.castawayName(c)} photo={photo(c)} out={g.isOut(c)} />
-                  {swap?.drop_id === c && <span className="small muted"> → swapped for {g.castawayName(swap.add_id)} from Week {SWAP_WEEK}</span>}
-                </li>
-              ))}
-            </ol>
+            <div className="tiles">
+              {team.map((c, i) => <CastawayTile key={c} name={g.castawayName(c)} photo={photo(c)} out={g.isOut(c)} rank={i + 1} />)}
+            </div>
+            {swap && <p className="small muted">Swapping {g.castawayName(swap.drop_id)} for {g.castawayName(swap.add_id)} from Week {SWAP_WEEK}.</p>}
           </>
         ) : (
           <p>Teams are locked and you don't have one. Ask Jack to set it for you.</p>

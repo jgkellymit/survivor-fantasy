@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { loadAll, toSeasonData } from "@/lib/db";
 import { gameState, teamOf } from "@/lib/game";
 import { scoreSeason } from "@/lib/scoring";
-import { CastawayChip } from "@/components/Avatar";
+import { CastawayTile } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +22,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
     <>
       <p className="small"><Link href="/">← Standings</Link></p>
       <h1>{p.name}</h1>
-      <p className="muted">Rank {s.rank} · {s.total} points</p>
+      <p className="muted">Rank <strong>#{s.rank}</strong> of {a.players.length} · <strong>{s.total}</strong> points</p>
       {g.teamsLocked && (
         <div className="card">
-          <div className="chips">{team.map((c) => <CastawayChip key={c} name={g.castawayName(c)} photo={photo(c)} out={g.isOut(c)} />)}</div>
+          <div className="tiles">{team.map((c, i) => <CastawayTile key={c} name={g.castawayName(c)} photo={photo(c)} out={g.isOut(c)} rank={i + 1} />)}</div>
           {sw && <p className="small muted" style={{ marginBottom: 0 }}>Swap: {g.castawayName(sw.drop_id)} → {g.castawayName(sw.add_id)} (from Week 5)</p>}
         </div>
       )}
@@ -35,9 +35,9 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         const picks = a.picks.filter((x) => x.player_id === id && x.week === w.week);
         return (
           <section className="card" id={`week-${w.week}`} key={w.week} style={{ scrollMarginTop: 80 }}>
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <h2 style={{ margin: 0 }}>{wk.is_finale ? "Finale" : `Week ${w.week}`}</h2>
-              <strong style={{ fontSize: "1.3rem" }}>{w.total}</strong>
+            <div className="weekhead">
+              <span className="wk">{wk.is_finale ? "Finale" : `Week ${w.week}`}</span>
+              <span className="score">{w.total > 0 ? "+" : ""}{w.total}</span>
             </div>
             <p className="small muted">Go-home pick: {picks.length ? picks.map((x) => g.castawayName(x.castaway_id)).join(", ") : "none"}</p>
             {w.lines.length === 0 ? <p className="muted">No points this week.</p> : (

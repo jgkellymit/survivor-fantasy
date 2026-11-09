@@ -57,6 +57,12 @@ create table if not exists weeks (
   is_finale boolean not null default false,
   results jsonb
 );
+create table if not exists castaway_photos (
+  castaway_id text primary key references castaways(id) on delete cascade,
+  mime text not null,
+  data bytea not null,
+  updated_at timestamptz not null default now()
+);
 create table if not exists weekly_picks (
   player_id text not null references players(id) on delete cascade,
   week int not null references weeks(number) on delete cascade,
