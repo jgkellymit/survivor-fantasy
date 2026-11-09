@@ -193,3 +193,18 @@ export async function adminSetPick(form: FormData) {
             on conflict (player_id, week, slot) do update set castaway_id = excluded.castaway_id, entered_by_admin = true`;
   done(String(form.get("back") ?? `/admin/players/${pid}`), "Pick saved.");
 }
+
+export async function uploadPhoto(form: FormData) {
+  await requireAdmin();
+  const id = String(form.get("id"));
+  const dataUrl = String(form.get("data") ?? "");
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(dataUrl);
+  if (!m) redirect("/admin/cast?err=" + encodeURIComponent("Choose an image first."));
+  const bytes = Buffer.from(m[2], "base64");
+  if (bytes.length > 900_000) redirect("/admin/cast?err=" + encodeURIComponent("That image is too large."));
+  const s = await db();
+  await s`insert into castaway_photos (castaway_id, mime, data) values (${id}, ${m[1]}, ${bytes})
+          on conflict (castaway_id) do update set mime = excluded.mime, data = excluded.data, updated_at = now()`;
+  await s`update castaways set photo_url = ${`/photo/${id}?v=${Date.now()}`} where id = ${id}`;
+  done("/admin/cast", "Photo saved.");
+}
