@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { loadAll, toSeasonData } from "@/lib/db";
-import { gameState } from "@/lib/game";
+import { gameState, weekLabel } from "@/lib/game";
 import { scoreSeason } from "@/lib/scoring";
 import { toPTInput } from "@/lib/time";
 import { clearResults, deleteWeek, saveResults, saveWeek } from "../../actions";
@@ -29,7 +29,7 @@ export default async function WeekAdmin({ params, searchParams }: { params: Prom
 
   return (
     <>
-      <h1>{w.is_finale ? `Week ${n}: finale` : `Week ${n}`} results</h1>
+      <h1>{weekLabel(w)} results</h1>
       <AdminNav ok={sp.ok} err={sp.err} />
 
       <form action={saveResults} className="card">
@@ -144,6 +144,7 @@ export default async function WeekAdmin({ params, searchParams }: { params: Prom
         <form action={saveWeek} className="row">
           <input type="hidden" name="number" value={n} />
           <input type="hidden" name="back" value={back} />
+          <label>Episode # <input type="number" name="episode" defaultValue={w.episode ?? ""} min={1} /></label>
           <label>Deadline (Pacific) <input type="datetime-local" name="deadline" defaultValue={toPTInput(w.deadline)} required /></label>
           <label>Tribals <select name="tribal_count" defaultValue={String(w.tribal_count)}><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
           <label><input type="checkbox" name="is_finale" defaultChecked={w.is_finale} /> Finale</label>

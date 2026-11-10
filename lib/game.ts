@@ -22,3 +22,9 @@ export function gameState(a: All, now = new Date()) {
 export function teamOf(a: All, playerId: string): string[] {
   return a.teams.filter((t) => t.player_id === playerId).sort((x, y) => x.slot - y.slot).map((t) => t.castaway_id);
 }
+
+/** "Week 1 (Episode 8)", or "Finale (Episode 14)" */
+export function weekLabel(w: { number: number; is_finale: boolean; episode: number | null }): string {
+  const base = w.is_finale ? "Finale" : `Week ${w.number}`;
+  return w.episode ? `${base} (Episode ${w.episode})` : base;
+}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadAll } from "@/lib/db";
-import { gameState } from "@/lib/game";
+import { gameState, weekLabel } from "@/lib/game";
 import { formatDeadline } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function WeekPage({ params }: { params: Promise<{ n: string
   return (
     <>
       <p className="small"><Link href="/">← Standings</Link></p>
-      <h1>{w.is_finale ? "Finale" : `Week ${n}`}</h1>
+      <h1>{weekLabel(w)}</h1>
       {r && (
         <div className="card">
           <h2 style={{ marginTop: 0 }}>What happened</h2>

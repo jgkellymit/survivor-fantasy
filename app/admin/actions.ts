@@ -70,10 +70,11 @@ export async function saveWeek(form: FormData) {
   const deadline = fromPTInput(String(form.get("deadline")));
   const tribals = Math.max(1, Math.min(3, Number(form.get("tribal_count") ?? 1)));
   const finale = form.get("is_finale") === "on";
+  const episode = form.get("episode") ? Number(form.get("episode")) || null : null;
   if (!Number.isInteger(number) || number < 1) redirect("/admin/weeks?err=" + encodeURIComponent("Week number must be 1 or more."));
   const s = await db();
-  await s`insert into weeks (number, deadline, tribal_count, is_finale) values (${number}, ${deadline}, ${tribals}, ${finale})
-          on conflict (number) do update set deadline = excluded.deadline, tribal_count = excluded.tribal_count, is_finale = excluded.is_finale`;
+  await s`insert into weeks (number, deadline, tribal_count, is_finale, episode) values (${number}, ${deadline}, ${tribals}, ${finale}, ${episode})
+          on conflict (number) do update set deadline = excluded.deadline, tribal_count = excluded.tribal_count, is_finale = excluded.is_finale, episode = excluded.episode`;
   done(form.get("back") ? String(form.get("back")) : "/admin/weeks", `Week ${number} saved.`);
 }
 export async function deleteWeek(form: FormData) {
