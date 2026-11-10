@@ -38,3 +38,24 @@ export function CastawayTile({ name, photo, out, rank }: { name: string; photo?:
     </div>
   );
 }
+
+/** Placeholder tiles for a team the viewer isn't allowed to see yet. */
+export function HiddenTiles({ count = 3 }: { count?: number }) {
+  return (
+    <div className="tiles hidden-tiles" title="Hidden until the deadline">
+      {Array.from({ length: count }, (_, i) => (
+        <div className="tile" key={i}>
+          <div className="tile-pic"><span className="avatar lg ghost" aria-hidden>?</span></div>
+          <span className="tile-name ghost-name">hidden</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Small face + name for a weekly pick. */
+export function PickBadge({ name, photo, hidden, none }: { name?: string; photo?: string | null; hidden?: boolean; none?: boolean }) {
+  if (hidden) return <span className="pickbadge ghost-pick"><span className="avatar md ghost" aria-hidden>?</span> hidden</span>;
+  if (none || !name) return <span className="pickbadge muted">no pick yet</span>;
+  return <span className="pickbadge"><Avatar name={name} photo={photo} /> {name}</span>;
+}

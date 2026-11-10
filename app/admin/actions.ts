@@ -209,3 +209,9 @@ export async function uploadPhoto(form: FormData) {
   await s`update castaways set photo_url = ${`/photo/${id}?v=${Date.now()}`} where id = ${id}`;
   done("/admin/cast", "Photo saved.");
 }
+
+export async function setRevealEarly(form: FormData) {
+  await requireAdmin();
+  await setSetting("reveal_early", form.get("on") === "1" ? "1" : "0");
+  done("/admin", form.get("on") === "1" ? "Everyone's picks are now visible before the deadlines." : "Picks are hidden from others until each deadline.");
+}

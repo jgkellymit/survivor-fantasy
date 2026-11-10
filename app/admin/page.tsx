@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { getSetting, loadAll, setSetting, newId } from "@/lib/db";
 import { gameState, teamOf, weekLabel } from "@/lib/game";
 import { formatDeadline, formatPT } from "@/lib/time";
-import { addPlayer, newJoinCode } from "./actions";
+import { addPlayer, newJoinCode, setRevealEarly } from "./actions";
 import { AdminNav } from "@/components/AdminNav";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +31,19 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         <p className="small muted">Send this to the group, or just send the site's address: anyone can tap their name on <strong>My team</strong> to sign in, or join there if they're new. Each player's personal link is in the list below.</p>
         <p><code className="link">{origin}/join/{code}</code></p>
         <form action={newJoinCode}><button className="secondary" type="submit">Make a new link (old one stops working)</button></form>
+      </section>
+
+      <section className="card">
+        <h2 style={{ marginTop: 0 }}>Can players see each other's picks before the deadline?</h2>
+        <p className="small muted">
+          {(await getSetting("reveal_early")) === "1"
+            ? "Yes: everyone's teams and weekly picks are visible right away."
+            : "No: other players' teams are blurred until teams lock, and weekly picks until each week's deadline. Everyone always sees their own."}
+        </p>
+        <form action={setRevealEarly}>
+          <input type="hidden" name="on" value={(await getSetting("reveal_early")) === "1" ? "0" : "1"} />
+          <button className="secondary" type="submit">{(await getSetting("reveal_early")) === "1" ? "Hide them until the deadlines" : "Show them right away"}</button>
+        </form>
       </section>
 
       {w && (
