@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { loadAll, toSeasonData } from "@/lib/db";
-import { gameState, teamOf } from "@/lib/game";
+import { gameState, teamOf, weekLabel } from "@/lib/game";
 import { scoreSeason, teamForWeek } from "@/lib/scoring";
 import { formatDeadline } from "@/lib/time";
 import { timeLeft } from "@/lib/countdown";
@@ -25,7 +25,7 @@ export default async function Home() {
     <>
       {w ? (
         <section className="hero">
-          <div className="kicker">{w.is_finale ? "THE FINALE" : `WEEK ${w.number}`}</div>
+          <div className="kicker">{weekLabel(w).toUpperCase()}</div>
           {left ? (
             <>
               <div className="big">{!g.teamsLocked ? "Pick your tribe" : "Who's going home?"}</div>
@@ -73,7 +73,7 @@ export default async function Home() {
             <thead>
               <tr>
                 <th className="sticky-col">Player</th>
-                {scored.map((wk) => <th key={wk.number} className="num"><Link href={`/week/${wk.number}`}>{wk.is_finale ? "Fin" : `W${wk.number}`}</Link></th>)}
+                {scored.map((wk) => <th key={wk.number} className="num"><Link href={`/week/${wk.number}`}>{wk.is_finale ? "Fin" : `W${wk.number}`}</Link>{wk.episode && <div className="ep">Ep {wk.episode}</div>}</th>)}
                 <th className="num">Total</th>
               </tr>
             </thead>

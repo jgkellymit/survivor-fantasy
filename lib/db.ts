@@ -57,6 +57,7 @@ create table if not exists weeks (
   is_finale boolean not null default false,
   results jsonb
 );
+alter table weeks add column if not exists episode int;
 create table if not exists castaway_photos (
   castaway_id text primary key references castaways(id) on delete cascade,
   mime text not null,
@@ -93,7 +94,7 @@ export function newId(len = 10) {
 // ---------- typed rows ----------
 export interface CastawayRow { id: string; name: string; photo_url: string | null; placement: number | null; sort: number }
 export interface PlayerRow { id: string; name: string; token: string; created_at: Date }
-export interface WeekRow { number: number; deadline: Date; tribal_count: number; is_finale: boolean; results: WeekResults | null }
+export interface WeekRow { number: number; deadline: Date; tribal_count: number; is_finale: boolean; results: WeekResults | null; episode: number | null }
 export interface PickRow { player_id: string; week: number; slot: number; castaway_id: string; submitted_at: Date; entered_by_admin: boolean }
 
 export async function getSetting(key: string): Promise<string | null> {

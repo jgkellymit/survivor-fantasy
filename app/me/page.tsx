@@ -2,9 +2,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { currentPlayer } from "@/lib/auth";
 import { loadAll } from "@/lib/db";
-import { gameState, teamOf } from "@/lib/game";
+import { gameState, teamOf, weekLabel } from "@/lib/game";
 import { formatDeadline } from "@/lib/time";
-import { saveSwap, saveTeam, saveWeeklyPick } from "@/app/actions";
+import { joinOpen, saveSwap, saveTeam, saveWeeklyPick, signInAs, signOut } from "@/app/actions";
 import { Avatar, CastawayTile } from "@/components/Avatar";
 import { SWAP_WEEK } from "@/lib/scoring";
 
@@ -14,12 +14,32 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
   const sp = await searchParams;
   const me = await currentPlayer();
   if (!me) {
+    const all = await loadAll();
     return (
-      <div className="card">
-        <h1>You're not signed in</h1>
+      <>
+        <h1>Who are you?</h1>
         {sp.err && <div className="notice err">{sp.err}</div>}
-        <p>Use the invite link Jack sent to the group to join, or your personal sign-in link if you've already joined on another device.</p>
-      </div>
+        {all.players.length > 0 && (
+          <section className="card">
+            <p className="muted small" style={{ marginTop: 0 }}>Tap your name. This device will stay signed in.</p>
+            <div className="namegrid">
+              {all.players.map((p) => (
+                <form key={p.id} action={signInAs}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <button className="secondary namebtn" type="submit">{p.name}</button>
+                </form>
+              ))}
+            </div>
+          </section>
+        )}
+        <section className="card">
+          <h2 style={{ marginTop: 0 }}>New to the league?</h2>
+          <form action={joinOpen} className="row">
+            <input name="name" placeholder="Your name" required maxLength={40} autoComplete="given-name" aria-label="Your name" />
+            <button type="submit">Join</button>
+          </form>
+        </section>
+      </>
     );
   }
   const a = await loadAll();
@@ -50,7 +70,7 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
       {/* Weekly pick */}
       {w && (
         <section className="card" style={{ order: g.teamsLocked ? 0 : 1 }}>
-          <h2 style={{ marginTop: 0 }}>Week {w.number}: who goes home?</h2>
+          <h2 style={{ marginTop: 0 }}>{weekLabel(w)}: who goes home?</h2>
           <p className="muted small">
             Due {formatDeadline(w.deadline)}. You can change it until then. Everyone's picks show after the deadline.
             {g.now >= w.deadline && <> <strong>The deadline has passed</strong>, so a pick now is marked late.</>}
@@ -154,7 +174,10 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
       )}
 
       </div>
-      <p className="small"><Link href={`/player/${me.id}`}>See your score breakdown →</Link></p>
+      <div className="row small" style={{ justifyContent: "space-between" }}>
+        <Link href={`/player/${me.id}`}>See your score breakdown →</Link>
+        <form action={signOut}><button className="secondary small-btn" type="submit">Not {me.name}? Switch player</button></form>
+      </div>
     </>
   );
 }

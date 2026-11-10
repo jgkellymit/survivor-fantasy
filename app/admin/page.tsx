@@ -2,7 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth";
 import { getSetting, loadAll, setSetting, newId } from "@/lib/db";
-import { gameState, teamOf } from "@/lib/game";
+import { gameState, teamOf, weekLabel } from "@/lib/game";
 import { formatDeadline, formatPT } from "@/lib/time";
 import { addPlayer, newJoinCode } from "./actions";
 import { AdminNav } from "@/components/AdminNav";
@@ -28,14 +28,14 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
 
       <section className="card">
         <h2 style={{ marginTop: 0 }}>Invite link</h2>
-        <p className="small muted">Send this to the group. People open it, type their name, and they're in.</p>
+        <p className="small muted">Send this to the group, or just send the site's address: anyone can tap their name on <strong>My team</strong> to sign in, or join there if they're new. Each player's personal link is in the list below.</p>
         <p><code className="link">{origin}/join/{code}</code></p>
         <form action={newJoinCode}><button className="secondary" type="submit">Make a new link (old one stops working)</button></form>
       </section>
 
       {w && (
         <section className="card">
-          <h2 style={{ marginTop: 0 }}>Week {w.number} picks</h2>
+          <h2 style={{ marginTop: 0 }}>{weekLabel(w)} picks</h2>
           <p className="small muted">Deadline {formatDeadline(w.deadline)}. {a.picks.filter((p) => p.week === w.number && p.slot === 1).length} of {a.players.length} picked.</p>
         </section>
       )}
@@ -44,7 +44,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
         <h2 style={{ marginTop: 0 }}>Players ({a.players.length})</h2>
         <div className="scroll">
           <table>
-            <thead><tr><th>Name</th><th>Team</th>{w && <th>Week {w.number} pick</th>}<th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Team</th>{w && <th>Week {w.number} pick</th>}<th>Personal link</th><th></th></tr></thead>
             <tbody>
               {a.players.map((p) => {
                 const team = teamOf(a, p.id);
@@ -60,6 +60,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
                         )) : <span className="tag late">missing</span>}
                       </td>
                     )}
+                    <td><code className="link small">{origin}/login/{p.token}</code></td>
                     <td><Link href={`/admin/players/${p.id}`}>Edit</Link></td>
                   </tr>
                 );

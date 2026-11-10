@@ -1,7 +1,8 @@
 "use server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { currentPlayer, setPlayerCookie } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { currentPlayer, PLAYER_COOKIE, setPlayerCookie } from "@/lib/auth";
 import { db, getSetting, loadAll, newId } from "@/lib/db";
 import { gameState, teamOf } from "@/lib/game";
 
@@ -83,4 +84,33 @@ export async function saveWeeklyPick(form: FormData) {
   }
   revalidatePath("/");
   back(g.now >= w.deadline ? "Pick saved, after the deadline, so it's marked late." : "Pick saved.", "ok");
+}
+
+/** "Who are you?": tap your name to sign in on this device. The league trusts each other (it used to be a shared sheet). */
+export async function signInAs(form: FormData) {
+  const id = String(form.get("id") ?? "");
+  const s = await db();
+  const r = await s<{ token: string }[]>`select token from players where id = ${id}`;
+  if (!r.length) redirect("/me");
+  await setPlayerCookie(r[0].token);
+  redirect("/me");
+}
+
+/** New player joining from the sign-in page. */
+export async function joinOpen(form: FormData) {
+  const name = String(form.get("name") ?? "").trim().replace(/\s+/g, " ");
+  if (name.length < 1 || name.length > 40) redirect("/me?err=" + encodeURIComponent("Enter a name (up to 40 characters)."));
+  const s = await db();
+  const existing = await s`select id from players where lower(name) = lower(${name})`;
+  if (existing.length) redirect("/me?err=" + encodeURIComponent(`“${name}” is already in the league. Tap your name in the list instead.`));
+  const token = newId(24);
+  await s`insert into players (id, name, token) values (${newId()}, ${name}, ${token})`;
+  await setPlayerCookie(token);
+  revalidatePath("/");
+  redirect("/me?welcome=1");
+}
+
+export async function signOut() {
+  (await cookies()).delete(PLAYER_COOKIE);
+  redirect("/me");
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadAll, toSeasonData } from "@/lib/db";
-import { gameState, teamOf } from "@/lib/game";
+import { gameState, teamOf, weekLabel } from "@/lib/game";
 import { scoreSeason } from "@/lib/scoring";
 import { CastawayTile } from "@/components/Avatar";
 
@@ -36,7 +36,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         return (
           <section className="card" id={`week-${w.week}`} key={w.week} style={{ scrollMarginTop: 80 }}>
             <div className="weekhead">
-              <span className="wk">{wk.is_finale ? "Finale" : `Week ${w.week}`}</span>
+              <span className="wk">{weekLabel(wk)}</span>
               <span className="score">{w.total > 0 ? "+" : ""}{w.total}</span>
             </div>
             <p className="small muted">Go-home pick: {picks.length ? picks.map((x) => g.castawayName(x.castaway_id)).join(", ") : "none"}</p>
