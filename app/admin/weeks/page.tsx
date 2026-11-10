@@ -23,18 +23,30 @@ export default async function Weeks({ searchParams }: { searchParams: Promise<{ 
       <section className="card">
         <h2 style={{ marginTop: 0 }}>Weeks</h2>
         {a.weeks.length === 0 && <p className="muted">No weeks yet. Add Week 1 below: its deadline is also when teams lock.</p>}
-        <table>
-          <tbody>
+        <div className="weeklist">
             {a.weeks.map((w) => (
-              <tr key={w.number}>
-                <td><strong>{weekLabel(w)}</strong>{w.tribal_count > 1 && <span className="tag"> {w.tribal_count} tribals</span>}</td>
-                <td className="small">{formatDeadline(w.deadline)}</td>
-                <td>{w.results ? <span className="tag">scored</span> : <span className="tag late">needs results</span>}</td>
-                <td><Link href={`/admin/weeks/${w.number}`}>{w.results ? "Edit results" : "Enter results"}</Link></td>
-              </tr>
+              <div className="weekrow" key={w.number}>
+                <div><strong>{weekLabel(w)}</strong>{w.tribal_count > 1 && <span className="tag"> {w.tribal_count} tribals</span>}</div>
+                <div className="small muted">{formatDeadline(w.deadline)}</div>
+                <div>
+                  <form action={saveWeek} className="row" style={{ gap: 6, flexWrap: "nowrap" }}>
+                    <input type="hidden" name="number" value={w.number} />
+                    <input type="hidden" name="deadline" value={toPTInput(w.deadline)} />
+                    <input type="hidden" name="tribal_count" value={w.tribal_count} />
+                    {w.is_finale && <input type="hidden" name="is_finale" value="on" />}
+                    <input type="number" name="episode" defaultValue={w.episode ?? ""} min={1} placeholder="Ep #" aria-label={`Episode for week ${w.number}`} style={{ width: 80 }} />
+                    <button className="secondary small-btn" type="submit">Save</button>
+                  </form>
+                </div>
+                <div>{w.results ? <span className="tag">scored</span> : <span className="tag late">needs results</span>}</div>
+                <div className="small">
+                  <Link href={`/admin/weeks/${w.number}`}>{w.results ? "Edit results" : "Enter results"}</Link>
+                  {" · "}
+                  <Link href={`/admin/weeks/${w.number}#settings`}>Edit week</Link>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+        </div>
       </section>
       <section className="card">
         <h2 style={{ marginTop: 0 }}>Add a week</h2>

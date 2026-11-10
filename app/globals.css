@@ -236,3 +236,8 @@ select {
 .castrow.out .avatar { filter: grayscale(1); opacity: .5; }
 .castrow.out .cname { color: var(--muted); }
 .spark { display: block; }
+
+/* admin weeks list */
+.weekrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.weekrow:last-child { border-bottom: 0; }
+.weekrow > :first-child { min-width: 170px; }

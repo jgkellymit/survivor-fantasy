@@ -139,7 +139,7 @@ export default async function WeekAdmin({ params, searchParams }: { params: Prom
         </section>
       )}
 
-      <section className="card">
+      <section className="card" id="settings">
         <h2 style={{ marginTop: 0 }}>Week settings</h2>
         <form action={saveWeek} className="row">
           <input type="hidden" name="number" value={n} />
