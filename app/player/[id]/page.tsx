@@ -37,7 +37,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         ) : (
           <HiddenTiles />
         )}
-        {sw && vis.teamVisible(id) && <p className="small muted" style={{ margin: 0 }}>Swap: {g.castawayName(sw.drop_id)} → {g.castawayName(sw.add_id)} (from Week 5)</p>}
+        {sw && vis.swapVisible(id) && <p className="small muted" style={{ margin: 0 }}>Swap: {g.castawayName(sw.drop_id)} → {g.castawayName(sw.add_id)} (from Week 5)</p>}
         {pw && (
           <div className="pickline">
             <span>{weekLabel(pw)} pick:</span>

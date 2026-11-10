@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { loadAll, toSeasonData } from "@/lib/db";
 import { gameState, teamOf, weekLabel } from "@/lib/game";
-import { scoreSeason, teamForWeek } from "@/lib/scoring";
+import { SWAP_WEEK, scoreSeason, teamForWeek } from "@/lib/scoring";
 import { formatDeadline } from "@/lib/time";
 import { timeLeft } from "@/lib/countdown";
 import { currentPlayer } from "@/lib/auth";
@@ -25,7 +25,7 @@ export default async function Home() {
   const top3 = scored.length ? scores.slice(0, 3) : [];
   const stillIn = a.castaways.filter((c) => !g.isOut(c.id)).length;
   const shownWeek = Math.max(lastWeek, w?.number ?? 0);
-  const teamNow = (pid: string) => teamForWeek(data.players.find((x) => x.id === pid)!, shownWeek);
+  const teamNow = (pid: string) => teamForWeek(data.players.find((x) => x.id === pid)!, vis.swapVisible(pid) ? shownWeek : Math.min(shownWeek, SWAP_WEEK - 1));
   const picksOf = (pid: string) => (w ? a.picks.filter((p) => p.player_id === pid && p.week === w.number).sort((x, y) => x.slot - y.slot) : []);
   const myScore = me ? scores.find((s) => s.playerId === me.id) : undefined;
 
@@ -164,7 +164,7 @@ export default async function Home() {
               ) : (
                 <HiddenTiles />
               )}
-              {vis.teamVisible(s.playerId) && p.swap && shownWeek < 5 && <span className="small muted">Swapping {g.castawayName(p.swap.drop)} → {g.castawayName(p.swap.add)} from Week 5</span>}
+              {vis.swapVisible(s.playerId) && p.swap && shownWeek < 5 && <span className="small muted">Swapping {g.castawayName(p.swap.drop)} → {g.castawayName(p.swap.add)} from Week 5</span>}
               {pickLine(s.playerId)}
             </div>
           );

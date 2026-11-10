@@ -16,5 +16,7 @@ export async function visibility(a: All, viewerId: string | null) {
     revealEarly,
     teamVisible: (playerId: string) => revealEarly || g.teamsLocked || playerId === viewerId,
     pickVisible: (playerId: string, w: WeekRow) => revealEarly || g.now >= w.deadline || playerId === viewerId,
+    // A swap can change until the Week 5 deadline, so others see it only after that.
+    swapVisible: (playerId: string) => revealEarly || !g.swapOpen || playerId === viewerId,
   };
 }

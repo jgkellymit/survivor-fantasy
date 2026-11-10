@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadAll, toSeasonData } from "@/lib/db";
 import { gameState, teamOf, weekLabel } from "@/lib/game";
-import { scoreSeason, teamForWeek } from "@/lib/scoring";
+import { SWAP_WEEK, scoreSeason, teamForWeek } from "@/lib/scoring";
 import { formatDeadline } from "@/lib/time";
 import { currentPlayer } from "@/lib/auth";
 import { visibility } from "@/lib/visibility";
@@ -69,7 +69,7 @@ export default async function WeekPage({ params }: { params: Promise<{ n: string
                 const p = data.players.find((x) => x.id === s.playerId)!;
                 const ps = a.picks.filter((x) => x.player_id === s.playerId && x.week === n).sort((x, y) => x.slot - y.slot);
                 const pickHidden = !vis.pickVisible(s.playerId, w);
-                const team = teamForWeek(p, n);
+                const team = teamForWeek(p, vis.swapVisible(s.playerId) ? n : Math.min(n, SWAP_WEEK - 1));
                 return (
                   <tr key={s.playerId}>
                     <td><Link href={`/player/${s.playerId}#week-${n}`}><strong>{s.name}</strong></Link></td>
