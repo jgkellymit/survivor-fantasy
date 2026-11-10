@@ -1,25 +1,45 @@
 import Link from "next/link";
 import { loadAll, toSeasonData } from "@/lib/db";
 import { gameState, teamOf, weekLabel } from "@/lib/game";
-import { scoreSeason, teamForWeek } from "@/lib/scoring";
+import { SWAP_WEEK, scoreSeason, teamForWeek } from "@/lib/scoring";
 import { formatDeadline } from "@/lib/time";
 import { timeLeft } from "@/lib/countdown";
-import { CastawayTile } from "@/components/Avatar";
+import { currentPlayer } from "@/lib/auth";
+import { visibility } from "@/lib/visibility";
+import { CastawayTile, HiddenTiles, PickBadge } from "@/components/Avatar";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const a = await loadAll();
+  const me = await currentPlayer();
   const g = gameState(a);
+  const vis = await visibility(a, me?.id ?? null);
   const data = toSeasonData(a);
   const scores = scoreSeason(data);
   const scored = a.weeks.filter((w) => w.results);
-  const photo = (id: string) => a.castaways.find((c) => c.id === id)?.photo_url;
+  const cast = (id: string) => a.castaways.find((c) => c.id === id);
   const lastWeek = scored.length ? scored[scored.length - 1].number : 1;
   const w = g.pickWeek;
   const left = w ? timeLeft(w.deadline, g.now) : null;
   const top3 = scored.length ? scores.slice(0, 3) : [];
   const stillIn = a.castaways.filter((c) => !g.isOut(c.id)).length;
+  const shownWeek = Math.max(lastWeek, w?.number ?? 0);
+  const teamNow = (pid: string) => teamForWeek(data.players.find((x) => x.id === pid)!, vis.swapVisible(pid) ? shownWeek : Math.min(shownWeek, SWAP_WEEK - 1));
+  const picksOf = (pid: string) => (w ? a.picks.filter((p) => p.player_id === pid && p.week === w.number).sort((x, y) => x.slot - y.slot) : []);
+  const myScore = me ? scores.find((s) => s.playerId === me.id) : undefined;
+
+  const pickLine = (pid: string) => {
+    if (!w) return null;
+    const ps = picksOf(pid);
+    const hidden = !vis.pickVisible(pid, w);
+    return (
+      <div className="pickline">
+        <span>{weekLabel(w)} pick:</span>
+        {hidden ? (ps.length ? <PickBadge hidden /> : <PickBadge none />) : ps.length ? ps.map((p) => <PickBadge key={p.slot} name={cast(p.castaway_id)?.name} photo={cast(p.castaway_id)?.photo_url} />) : <PickBadge none />}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -33,7 +53,7 @@ export default async function Home() {
                 {!g.teamsLocked ? "Choose your 3 castaways and your first vote-off pick. " : "Make your vote-off pick. "}
                 Due {formatDeadline(w.deadline)} <span className="countdown">{left}</span>
               </p>
-              <Link className="btn" href="/me">Make your picks →</Link>
+              <Link className="btn" href="/me">{me ? "Update your picks →" : "Make your picks →"}</Link>
             </>
           ) : (
             <>
@@ -50,6 +70,35 @@ export default async function Home() {
           <p>Check back soon to pick your tribe.</p>
         </section>
       ) : null}
+
+      {me && (
+        <section className="card mytribe">
+          <div className="row-split">
+            <div>
+              <div className="label">Your tribe{myScore && scored.length ? ` · ${myScore.total} pts · #${myScore.rank}` : ""}</div>
+              {teamOf(a, me.id).length === 3 ? (
+                <div className="tiles">
+                  {teamNow(me.id).map((c, i) => <CastawayTile key={c} name={cast(c)?.name ?? "?"} photo={cast(c)?.photo_url} out={g.isOut(c)} rank={i + 1} />)}
+                </div>
+              ) : (
+                <Link href="/me">Pick your 3 castaways →</Link>
+              )}
+            </div>
+            {w && (
+              <div>
+                <div className="label">{weekLabel(w)} go-home pick</div>
+                {picksOf(me.id).length ? (
+                  <div className="tiles">
+                    {picksOf(me.id).map((p) => <CastawayTile key={p.slot} name={cast(p.castaway_id)?.name ?? "?"} photo={cast(p.castaway_id)?.photo_url} />)}
+                  </div>
+                ) : (
+                  <Link href="/me">Make your pick →</Link>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {top3.length === 3 && (
         <div className="podium" aria-label="Top three">
@@ -95,24 +144,28 @@ export default async function Home() {
       {scored.length > 0 && <p className="small muted">Tap any weekly score to see how it was calculated.</p>}
 
       <h2 className="section-title">🌴 Tribes {a.castaways.length > 0 && <span className="tag">{stillIn} of {a.castaways.length} castaways still in</span>}</h2>
-      {!g.teamsLocked && <p className="muted small">Teams are revealed when they lock{g.week1 ? ` at ${formatDeadline(g.week1.deadline)}` : ""}.</p>}
+      {!g.teamsLocked && !vis.revealEarly && <p className="muted small">Other players' tribes are hidden until they lock{g.week1 ? ` at ${formatDeadline(g.week1.deadline)}` : ""}.</p>}
       <div className="grid2">
         {scores.map((s) => {
           const p = data.players.find((x) => x.id === s.playerId)!;
-          const team = teamForWeek(p, Math.max(lastWeek, g.pickWeek?.number ?? 0));
           const picked = teamOf(a, s.playerId).length === 3;
           return (
             <div className="card teamcard" key={s.playerId}>
               <div className="head">
-                <Link href={`/player/${s.playerId}`}>{s.name}</Link>
-                {g.teamsLocked ? <span className="pts">{s.total}</span> : <span className="muted small">{picked ? "✓ tribe picked" : "no picks yet"}</span>}
+                <Link href={`/player/${s.playerId}`}>{s.name}{me?.id === s.playerId ? " (you)" : ""}</Link>
+                {scored.length ? <span className="pts">{s.total}</span> : null}
               </div>
-              {g.teamsLocked && team.length > 0 && (
+              {!picked ? (
+                <span className="muted small">No tribe picked yet</span>
+              ) : vis.teamVisible(s.playerId) ? (
                 <div className="tiles">
-                  {team.map((c, i) => <CastawayTile key={c} name={g.castawayName(c)} photo={photo(c)} out={g.isOut(c)} rank={i + 1} />)}
+                  {teamNow(s.playerId).map((c, i) => <CastawayTile key={c} name={cast(c)?.name ?? "?"} photo={cast(c)?.photo_url} out={g.isOut(c)} rank={i + 1} />)}
                 </div>
+              ) : (
+                <HiddenTiles />
               )}
-              {g.teamsLocked && p.swap && <span className="small muted">Swapped {g.castawayName(p.swap.drop)} → {g.castawayName(p.swap.add)} (from Week 5)</span>}
+              {vis.swapVisible(s.playerId) && p.swap && shownWeek < 5 && <span className="small muted">Swapping {g.castawayName(p.swap.drop)} → {g.castawayName(p.swap.add)} from Week 5</span>}
+              {pickLine(s.playerId)}
             </div>
           );
         })}

@@ -114,6 +114,12 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
             {cast.length < 3 ? (
               <p>The cast hasn't been added yet. Check back soon.</p>
             ) : (
+              <>
+              {team.length === 3 && (
+                <div className="tiles" style={{ marginBottom: 14 }}>
+                  {team.map((c, i) => <CastawayTile key={c} name={g.castawayName(c)} photo={photo(c)} out={g.isOut(c)} rank={i + 1} />)}
+                </div>
+              )}
               <form action={saveTeam}>
                 {[1, 2, 3].map((n) => (
                   <div className="slot" key={n}>
@@ -126,6 +132,7 @@ export default async function Me({ searchParams }: { searchParams: Promise<{ ok?
                 ))}
                 <button type="submit">{team.length ? "Update team" : "Save team"}</button>
               </form>
+              </>
             )}
           </>
         ) : team.length ? (

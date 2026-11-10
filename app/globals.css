@@ -218,3 +218,21 @@ select {
   background-repeat: no-repeat; background-position: right 14px center; background-size: 12px 8px;
   cursor: pointer;
 }
+.avatar.ghost { background: var(--surface-2) !important; color: var(--muted); border-style: dashed; box-shadow: none; filter: blur(.4px); }
+.ghost-name { color: var(--muted); font-style: italic; font-weight: 600; }
+.hidden-tiles .tile { opacity: .7; }
+.pickbadge { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: .9rem; }
+.ghost-pick { color: var(--muted); font-style: italic; }
+.pickline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 8px; }
+.mytribe { border: 2px solid var(--flame-2); }
+.mytribe .row-split { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; }
+.mytribe .label { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 800; margin-bottom: 6px; }
+.weeknav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+.weeknav .btn { padding: 6px 12px; font-size: .9rem; }
+.weeknav .disabled { visibility: hidden; }
+.event { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.bar { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--flame-1), var(--flame-3)); }
+.castrow td { vertical-align: middle; }
+.castrow.out .avatar { filter: grayscale(1); opacity: .5; }
+.castrow.out .cname { color: var(--muted); }
+.spark { display: block; }

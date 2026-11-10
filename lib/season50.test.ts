@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scoreSeason } from "./scoring";
+import { scoreCastaways, scoreSeason, teamForWeek } from "./scoring";
 import { playerOrder, season50, sheetScores } from "./season50.fixture";
 
 // Places where the sheet itself is off, so the engine is expected to differ.
@@ -26,4 +26,17 @@ it("finale: Rio 70 and Pat 55, as Jack scored them", () => {
   const fin = (p: string) => scores.find((x) => x.playerId === p)!.weeks.find((x) => x.week === 9)!.total;
   expect(fin("Rio")).toBe(70);
   expect(fin("Pat")).toBe(55);
+});
+
+it("castaway points add up to each player's non-pick points", () => {
+  const players = scoreSeason(season50);
+  const cast = new Map(scoreCastaways(season50).map((c) => [c.castawayId, c]));
+  for (const p of season50.players) {
+    for (const w of players.find((x) => x.playerId === p.id)!.weeks) {
+      const nonPick = w.lines.filter((l) => l.rule !== "weekly-pick").reduce((s, l) => s + l.points, 0);
+      const team = teamForWeek(p, w.week);
+      const sum = team.reduce((s, c) => s + (cast.get(c)!.weeks.find((x) => x.week === w.week)?.total ?? 0), 0);
+      expect(sum, `${p.id} week ${w.week}`).toBe(nonPick);
+    }
+  }
 });

@@ -280,3 +280,61 @@ function rankPlayers(scores: PlayerScore[], data: SeasonData): PlayerScore[] {
   });
   return sorted;
 }
+
+export interface CastawayWeekScore {
+  week: number;
+  total: number;
+  lines: ScoreLine[];
+}
+export interface CastawayScore {
+  castawayId: string;
+  name: string;
+  total: number;
+  weeks: CastawayWeekScore[];
+}
+
+/**
+ * Points each castaway earned for whoever had them on their team, week by week
+ * (everything except weekly go-home picks). A player's weekly score is the sum of
+ * their team's castaway points plus their pick points.
+ */
+export function scoreCastaways(data: SeasonData): CastawayScore[] {
+  const weeks = [...data.weeks].sort((a, b) => a.number - b.number);
+  const elim = eliminations(weeks);
+  const out = data.castaways.map((c) => {
+    const cw: CastawayWeekScore[] = [];
+    for (const w of weeks) {
+      const r = w.results;
+      if (!r) continue;
+      const lines: ScoreLine[] = [];
+      const e = elim.get(c.id);
+      if (!w.isFinale && (e === undefined || e > w.number)) {
+        lines.push({ points: w.number, reason: `Survived week ${w.number}`, rule: "survival" });
+      }
+      for (const im of r.immunity) {
+        if (im.castawayId !== c.id) continue;
+        lines.push(im.place === 1 ? { points: 10, reason: "Won immunity", rule: "immunity" } : { points: 5, reason: "Second in immunity", rule: "immunity" });
+      }
+      for (const a of r.advantagesFound) if (a.castawayId === c.id) lines.push({ points: 5, reason: "Found an advantage", rule: "advantages" });
+      for (const a of r.advantagesPlayed) if (a.castawayId === c.id && a.counts !== false) lines.push({ points: 5, reason: "Played an advantage", rule: "advantages" });
+      for (const t of r.tribals) {
+        if (data.gotVotesBonus !== false && (t.votes[c.id] ?? 0) > 0 && t.wentHome !== c.id) {
+          lines.push({ points: 5, reason: "Got votes but stayed", rule: "got-votes" });
+        }
+        if (t.wentHome === c.id) {
+          const held = t.departure === "medevac" ? 0 : t.advantagesHeld;
+          if (held > 0) lines.push({ points: -5 * held, reason: `Went home holding ${held} advantage${held === 1 ? "" : "s"}`, rule: "advantages" });
+          if (t.departure === "quit") lines.push({ points: -5, reason: "Quit", rule: "quit-medevac" });
+        }
+      }
+      if (w.isFinale) {
+        const pts = c.placement === 1 ? 30 : c.placement === 2 ? 20 : c.placement === 3 ? 10 : 0;
+        if (pts) lines.push({ points: pts, reason: c.placement === 1 ? "Won the season" : c.placement === 2 ? "Finished second" : "Finished third", rule: "finale" });
+        if (r.fireWinner === c.id) lines.push({ points: 10, reason: "Won fire-making", rule: "finale" });
+      }
+      cw.push({ week: w.number, total: lines.reduce((s, l) => s + l.points, 0), lines });
+    }
+    return { castawayId: c.id, name: c.name, total: cw.reduce((s, x) => s + x.total, 0), weeks: cw };
+  });
+  return out.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+}
