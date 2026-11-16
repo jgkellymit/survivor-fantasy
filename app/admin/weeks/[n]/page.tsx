@@ -78,7 +78,8 @@ export default async function WeekAdmin({ params, searchParams }: { params: Prom
             </tbody>
           </table>
         </div>
-        <p className="small muted">“Immune” means wearing immunity at tribal (usually the winner). Votes against them don't count for second-most.</p>
+        <p className="small muted">“Immune” means wearing immunity at tribal (usually the winner). Votes against them don't count for second-most. If two castaways tie for immunity, set both to “Won” (each gets +10, no runner-up). Enter every vote cast, including votes cancelled by an idol or Shot in the Dark: anyone with votes who stays gets +5.</p>
+        <p className="small muted">If two people go home in the same vote, use “Also went home” below. It's still one week and one go-home pick, and a pick of either one counts as correct.</p>
 
         {tribals.map((t, i) => (
           <div key={i} className="row" style={{ marginTop: 12 }}>
@@ -95,6 +96,13 @@ export default async function WeekAdmin({ params, searchParams }: { params: Prom
               </select>
             </label>
             <label>Advantages they left holding <input type="number" min={0} name={`held_${i}`} defaultValue={t?.advantagesHeld || ""} /></label>
+            <label>Also went home (same vote){" "}
+              <select name={`home2_${i}`} defaultValue={t?.alsoWentHome ?? ""}>
+                <option value="">No one</option>
+                {active.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <label>Advantages they left holding <input type="number" min={0} name={`held2_${i}`} defaultValue={t?.alsoAdvantagesHeld || ""} /></label>
           </div>
         ))}
 

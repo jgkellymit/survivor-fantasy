@@ -14,7 +14,23 @@ export interface Tribal {
   departure: Departure;
   /** number of advantages/idols the departing castaway left holding */
   advantagesHeld: number;
+  /**
+   * A second castaway sent home at the same tribal (a double boot in one vote).
+   * Same departure type as wentHome. Optional so older saved results still load.
+   */
+  alsoWentHome?: string | null;
+  /** advantages the second departing castaway left holding */
+  alsoAdvantagesHeld?: number;
 }
+
+/** Everyone who left at this tribal, with the advantages each left holding. */
+export function departures(t: Tribal): { castawayId: string; held: number }[] {
+  const out: { castawayId: string; held: number }[] = [];
+  if (t.wentHome) out.push({ castawayId: t.wentHome, held: t.advantagesHeld });
+  if (t.alsoWentHome && t.alsoWentHome !== t.wentHome) out.push({ castawayId: t.alsoWentHome, held: t.alsoAdvantagesHeld ?? 0 });
+  return out;
+}
+const wentHomeAt = (t: Tribal, id: string) => departures(t).some((d) => d.castawayId === id);
 
 export interface ImmunityResult {
   castawayId: string;
@@ -111,16 +127,16 @@ export function eliminations(weeks: Week[]): Map<string, number> {
   const out = new Map<string, number>();
   for (const w of weeks) {
     for (const t of w.results?.tribals ?? []) {
-      if (t.wentHome && !out.has(t.wentHome)) out.set(t.wentHome, w.number);
+      for (const d of departures(t)) if (!out.has(d.castawayId)) out.set(d.castawayId, w.number);
     }
   }
   return out;
 }
 
-/** Castaways (other than the boot) with the most counted votes, excluding immune castaways. */
+/** Castaways (other than the boot or boots) with the most counted votes, excluding immune castaways. */
 export function secondMostVoted(t: Tribal): string[] {
   const counted = Object.entries(t.votes).filter(
-    ([id, n]) => n > 0 && !t.immune.includes(id) && id !== t.wentHome,
+    ([id, n]) => n > 0 && !t.immune.includes(id) && !wentHomeAt(t, id),
   );
   if (counted.length === 0) return [];
   const max = Math.max(...counted.map(([, n]) => n));
@@ -180,22 +196,23 @@ export function scoreSeason(data: SeasonData): PlayerScore[] {
       for (const t of r.tribals) {
         // Got votes but stayed
         if (data.gotVotesBonus !== false) for (const [cid, n] of Object.entries(t.votes)) {
-          if (n > 0 && cid !== t.wentHome && onTeam(cid)) {
+          if (n > 0 && !wentHomeAt(t, cid) && onTeam(cid)) {
             lines.push({ points: 5, reason: `${name(cid)} got votes but stayed`, rule: "got-votes" });
           }
         }
         // Departure penalties
-        if (t.wentHome && onTeam(t.wentHome)) {
-          const held = t.departure === "medevac" ? 0 : t.advantagesHeld;
+        for (const d of departures(t)) {
+          if (!onTeam(d.castawayId)) continue;
+          const held = t.departure === "medevac" ? 0 : d.held;
           if (held > 0) {
             lines.push({
               points: -5 * held,
-              reason: `${name(t.wentHome)} went home holding ${held} advantage${held === 1 ? "" : "s"}`,
+              reason: `${name(d.castawayId)} went home holding ${held} advantage${held === 1 ? "" : "s"}`,
               rule: "advantages",
             });
           }
           if (t.departure === "quit") {
-            lines.push({ points: -5, reason: `${name(t.wentHome)} quit`, rule: "quit-medevac" });
+            lines.push({ points: -5, reason: `${name(d.castawayId)} quit`, rule: "quit-medevac" });
           }
         }
       }
@@ -218,7 +235,7 @@ export function scoreSeason(data: SeasonData): PlayerScore[] {
       // Weekly go-home picks
       const myPicks = data.picks.filter((pk) => pk.playerId === p.id && pk.week === w.number);
       for (const pk of myPicks) {
-        const votedOut = r.tribals.some((t) => t.wentHome === pk.castawayId && t.departure === "vote");
+        const votedOut = r.tribals.some((t) => wentHomeAt(t, pk.castawayId) && t.departure === "vote");
         if (votedOut) {
           lines.push({ points: 10, reason: `Picked ${name(pk.castawayId)} to go home, and they did`, rule: "weekly-pick" });
         } else if (r.tribals.some((t) => t.departure === "vote" && secondMostVoted(t).includes(pk.castawayId))) {
@@ -318,11 +335,12 @@ export function scoreCastaways(data: SeasonData): CastawayScore[] {
       for (const a of r.advantagesFound) if (a.castawayId === c.id) lines.push({ points: 5, reason: "Found an advantage", rule: "advantages" });
       for (const a of r.advantagesPlayed) if (a.castawayId === c.id && a.counts !== false) lines.push({ points: 5, reason: "Played an advantage", rule: "advantages" });
       for (const t of r.tribals) {
-        if (data.gotVotesBonus !== false && (t.votes[c.id] ?? 0) > 0 && t.wentHome !== c.id) {
+        if (data.gotVotesBonus !== false && (t.votes[c.id] ?? 0) > 0 && !wentHomeAt(t, c.id)) {
           lines.push({ points: 5, reason: "Got votes but stayed", rule: "got-votes" });
         }
-        if (t.wentHome === c.id) {
-          const held = t.departure === "medevac" ? 0 : t.advantagesHeld;
+        const dep = departures(t).find((d) => d.castawayId === c.id);
+        if (dep) {
+          const held = t.departure === "medevac" ? 0 : dep.held;
           if (held > 0) lines.push({ points: -5 * held, reason: `Went home holding ${held} advantage${held === 1 ? "" : "s"}`, rule: "advantages" });
           if (t.departure === "quit") lines.push({ points: -5, reason: "Quit", rule: "quit-medevac" });
         }
