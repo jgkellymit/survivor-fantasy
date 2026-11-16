@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { ADMIN_COOKIE, checkAdminPassword, requireAdmin, setAdminCookie } from "@/lib/auth";
 import { db, loadAll, newId, setSetting } from "@/lib/db";
 import { fromPTInput } from "@/lib/time";
-import type { Departure, WeekResults } from "@/lib/scoring";
+import type { Departure, Tribal, WeekResults } from "@/lib/scoring";
 
 function done(path: string, msg?: string): never {
   revalidatePath("/", "layout");
@@ -108,9 +108,16 @@ export async function saveResults(form: FormData) {
       if (v > 0) votes[id] = v;
       if (form.get(`immune_${t}_${id}`) === "on") immune.push(id);
     }
-    const wentHome = String(form.get(`home_${t}`) ?? "") || null;
+    let wentHome = String(form.get(`home_${t}`) ?? "") || null;
+    let also = String(form.get(`home2_${t}`) ?? "") || null;
+    let held = num(`held_${t}`);
+    let held2 = num(`held2_${t}`);
+    if (!wentHome && also) [wentHome, also, held, held2] = [also, null, held2, 0];
+    if (also === wentHome) also = null;
     const dep = String(form.get(`dep_${t}`) ?? "vote") as Departure;
-    r.tribals.push({ votes, immune, wentHome, departure: ["vote", "quit", "medevac"].includes(dep) ? dep : "vote", advantagesHeld: num(`held_${t}`) });
+    const tribal: Tribal = { votes, immune, wentHome, departure: ["vote", "quit", "medevac"].includes(dep) ? dep : "vote", advantagesHeld: held };
+    if (also) Object.assign(tribal, { alsoWentHome: also, alsoAdvantagesHeld: held2 });
+    r.tribals.push(tribal);
   }
   if (w.is_finale) {
     r.fireWinner = String(form.get("fire") ?? "") || null;

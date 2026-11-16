@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadAll, toSeasonData } from "@/lib/db";
 import { gameState, teamOf, weekLabel } from "@/lib/game";
-import { SWAP_WEEK, scoreSeason, teamForWeek } from "@/lib/scoring";
+import { SWAP_WEEK, departures, scoreSeason, teamForWeek } from "@/lib/scoring";
 import { formatDeadline } from "@/lib/time";
 import { currentPlayer } from "@/lib/auth";
 import { visibility } from "@/lib/visibility";
@@ -49,7 +49,9 @@ export default async function WeekPage({ params }: { params: Promise<{ n: string
             const votes = Object.entries(t.votes).filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]);
             return (
               <div key={`t${k}`}>
-                {t.wentHome ? face(t.wentHome, `${t.departure === "vote" ? "was voted out" : t.departure === "quit" ? "quit" : "was medically evacuated"}${r.tribals.length > 1 ? ` at tribal ${k + 1}` : ""} 🕯️`) : <p>No one went home{r.tribals.length > 1 ? ` at tribal ${k + 1}` : ""}.</p>}
+                {departures(t).length > 0
+                  ? departures(t).map((d) => <div key={d.castawayId}>{face(d.castawayId, `${t.departure === "vote" ? "was voted out" : t.departure === "quit" ? "quit" : "was medically evacuated"}${r.tribals.length > 1 ? ` at tribal ${k + 1}` : ""} 🕯️`)}</div>)
+                  : <p>No one went home{r.tribals.length > 1 ? ` at tribal ${k + 1}` : ""}.</p>}
                 {votes.length > 0 && <p className="small muted" style={{ margin: "0 0 8px 66px" }}>Votes: {votes.map(([c, v]) => `${cast(c)?.name ?? "?"} ${v}`).join(", ")}</p>}
               </div>
             );

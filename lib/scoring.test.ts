@@ -160,3 +160,35 @@ describe("tiebreaker", () => {
     expect(scoreSeason(d).map((x) => x.rank)).toEqual([1, 1]);
   });
 });
+
+describe("Week 1 edge cases: tied immunity and a double boot", () => {
+  it("two immunity winners each get +10 and nobody gets runner-up", () => {
+    const d = season([week(1, { immunity: [{ castawayId: "A", place: 1 }, { castawayId: "B", place: 1 }] })]);
+    expect(lines(d).filter((l) => l.rule === "immunity").map((l) => l.points)).toEqual([10, 10]);
+  });
+  it("two castaways sent home in one vote: both out, one week, either pick is correct", () => {
+    const tw = tribal({ wentHome: "A", alsoWentHome: "D", votes: { A: 4, D: 4, B: 2, E: 1 }, alsoAdvantagesHeld: 1 });
+    const d = season([week(1, { tribals: [tw] }), week(2, {})], {
+      players: [
+        { id: "p1", name: "Pat", team: ["A", "B", "C"], swap: null },
+        { id: "p2", name: "Quinn", team: ["D", "E", "F"], swap: null },
+      ],
+      picks: [{ playerId: "p1", week: 1, castawayId: "D" }, { playerId: "p2", week: 1, castawayId: "B" }],
+    });
+    const s = scoreSeason(d);
+    const pat = s.find((x) => x.playerId === "p1")!.weeks[0].lines;
+    const quinn = s.find((x) => x.playerId === "p2")!.weeks[0].lines;
+    // Pat: B, C survive (1×2), B got votes +5, picked D +10. A gets no got-votes bonus.
+    expect(pat.map((l) => l.points)).toEqual([2, 5, 10]);
+    // Quinn: E, F survive (1×2), E got votes +5, D left holding an advantage −5, B was second-most +5.
+    expect(quinn.map((l) => l.points)).toEqual([2, 5, -5, 5]);
+    // Week 2: both A and D are out.
+    expect(s.find((x) => x.playerId === "p1")!.weeks[1].lines[0].points).toBe(4);
+    expect(s.find((x) => x.playerId === "p2")!.weeks[1].lines[0].points).toBe(4);
+    expect(secondMostVoted(tw)).toEqual(["B"]);
+  });
+  it("votes cancelled by an idol or Shot in the Dark still give +5", () => {
+    const d = season([week(1, { tribals: [tribal({ wentHome: "D", votes: { D: 3, A: 5 }, immune: ["A"] })] })]);
+    expect(lines(d).filter((l) => l.rule === "got-votes").map((l) => l.points)).toEqual([5]);
+  });
+});
